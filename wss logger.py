@@ -3,6 +3,7 @@ import ssl
 import websockets
 import base64
 import os
+import time
 
 lockfile = {}
 
@@ -24,14 +25,18 @@ ssl_context.verify_mode = ssl.CERT_NONE
 
 local_headers = {}
 local_headers['Authorization'] = 'Basic ' + base64.b64encode(('riot:' + lockfile['password']).encode()).decode()
+url = f"wss://127.0.0.1:{lockfile['port']}"
+
 
 async def ws():
-    async with websockets.connect(f"wss://127.0.0.1:{lockfile['port']}", ssl=ssl_context, extra_headers=local_headers) as websocket:
+    async with websockets.connect(url, ssl=ssl_context, extra_headers=local_headers) as websocket:
         await websocket.send("[5, \"OnJsonApiEvent\"]")
 
         while True:
             response = await websocket.recv()
-            print(response)
+            if len(response) > 0:
+                print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+                print(response)
 
 
 asyncio.get_event_loop().run_until_complete(ws())
